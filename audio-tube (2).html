@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>صوتي - يوتيوب صوت بس</title>
+<style>
+:root{--bg:#0f1115;--card:#181b22;--line:#262b35;--tx:#eef1f6;--mu:#8c95a6;--ac:#ff4d4d;--ok:#3ecf8e}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,"Segoe UI",Tahoma,sans-serif;padding-bottom:230px}
+header{position:sticky;top:0;z-index:5;background:rgba(15,17,21,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 14px}
+h1{margin:0 0 10px;font-size:18px;display:flex;align-items:center;gap:8px}
+h1 small{color:var(--mu);font-weight:400;font-size:12px}
+form{display:flex;gap:8px}
+input[type=search],input[type=text]{flex:1;background:var(--card);border:1px solid var(--line);color:var(--tx);padding:12px 14px;border-radius:12px;font-size:16px;min-width:0}
+button{font:inherit;cursor:pointer;border:0;color:var(--tx)}
+.btn{background:var(--ac);color:#fff;padding:0 18px;border-radius:12px;font-weight:600}
+.opts{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:10px;font-size:13px;color:var(--mu);align-items:center}
+.opts select{background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:4px 6px}
+.opts label{display:flex;gap:6px;align-items:center}
+.link{background:none;color:var(--mu);text-decoration:underline;font-size:13px;padding:0}
+main{padding:12px 14px;max-width:760px;margin:auto}
+#status{color:var(--mu);font-size:14px;padding:8px 2px;min-height:20px}
+#status.err{color:#ff8a8a}
+.item{display:flex;gap:12px;width:100%;text-align:right;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;align-items:center}
+.item.on{border-color:var(--ac)}
+.item img{width:96px;height:54px;object-fit:cover;border-radius:8px;background:#222;flex:none}
+.item .nm{width:40px;height:40px;border-radius:10px;background:#222;display:grid;place-items:center;flex:none;color:var(--mu)}
+.item .t{font-size:14px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .m{font-size:12px;color:var(--mu);margin-top:3px}
+.more{width:100%;padding:12px;border-radius:12px;background:var(--card);border:1px solid var(--line);margin-top:4px}
+#player{position:fixed;bottom:0;left:0;right:0;background:#14171d;border-top:1px solid var(--line);padding:12px 14px 14px;z-index:10}
+.pin{max-width:760px;margin:auto}
+#title{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#sub{font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.seek{direction:ltr;display:flex;align-items:center;gap:8px;margin:10px 0 6px;font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums}
+#seek{flex:1;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:#2a2f3a;outline:0}
+#seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#fff}
+#seek::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:0}
+.ctl{display:flex;justify-content:center;align-items:center;gap:14px;direction:ltr}
+.ctl button{background:none;font-size:13px;padding:8px 10px;border-radius:10px;color:var(--tx)}
+.ctl .pp{width:56px;height:56px;border-radius:50%;background:var(--ac);font-size:22px;padding:0}
+.ctl .sk{color:var(--mu)}
+.info{font-size:12px;color:var(--ok);text-align:center;margin-top:6px;min-height:16px}
+#fb{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:20;display:none;align-items:center;justify-content:center;padding:14px;flex-direction:column;gap:10px}
+#fb.show{display:flex}
+#fb iframe{width:100%;max-width:640px;aspect-ratio:16/9;border:0;border-radius:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎧 صوتي <small>يوتيوب صوت بس · بيشتغل وهو بيحمل</small></h1>
+  <form id="f">
+    <input id="q" type="search" placeholder="ابحث أو الصق لينك فيديو يوتيوب" autocomplete="off">
+    <button class="btn" type="submit">بحث</button>
+  </form>
+  <div class="opts">
+    <label>الجودة
+      <select id="qual">
+        <option value="low">أقل استهلاك (موصى بها)</option>
+        <option value="mid">متوسطة</option>
+        <option value="high">عالية</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="thumbs"> صور مصغرة</label>
+    <button class="link" id="addInst" type="button">إضافة سيرفر</button>
+  </div>
+</header>
+
+<main>
+  <div id="status"></div>
+  <div id="list"></div>
+  <button class="more" id="more" style="display:none">عرض المزيد</button>
+</main>
+
+<div id="player">
+  <div class="pin">
+    <div id="title">اختار حاجة تسمعها</div>
+    <div id="sub">&nbsp;</div>
+    <div class="seek">
+      <span id="cur">0:00</span>
+      <input id="seek" type="range" min="0" max="100" step="1" value="0">
+      <span id="dur">0:00</span>
+    </div>
+    <div class="ctl">
+      <button id="prev" title="السابق">⏮</button>
+      <button id="b15" class="sk">−15</button>
+      <button id="pp" class="pp">▶</button>
+      <button id="f15" class="sk">+15</button>
+      <button id="next" title="التالي">⏭</button>
+    </div>
+    <div class="opts" style="justify-content:center">
+      <label>السرعة
+        <select id="rate"><option>0.75</option><option selected>1</option><option>1.25</option><option>1.5</option><option>1.75</option><option>2</option></select>
+      </label>
+      <label>مؤقت النوم
+        <select id="sleep"><option value="0">إيقاف</option><option value="15">15 د</option><option value="30">30 د</option><option value="60">60 د</option></select>
+      </label>
+      <button class="link" id="official" type="button">المشغل الرسمي</button>
+    </div>
+    <div class="info" id="info"></div>
+  </div>
+</div>
+
+<div id="fb">
+  <iframe id="fbf" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  <button class="btn" id="fbx" style="padding:10px 24px">إغلاق</button>
+</div>
+
+<audio id="audio" preload="auto"></audio>
+
+<script>
+const $ = s => document.querySelector(s);
+const audio = $('#audio');
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- سيرفرات Piped (بتتجرب بالترتيب تلقائي) ---------- */
+const DEFAULTS = [
+  'https://pipedapi.kavin.rocks',
+  'https://api.piped.private.coffee',
+  'https://pipedapi.adminforge.de',
+  'https://pipedapi.leptons.xyz',
+  'https://pipedapi.reallyaweso.me',
+  'https://pipedapi.darkness.services'
+];
+let custom = store.get('custom', []);
+let good = store.get('good', null);
+const instances = () => [...custom, ...DEFAULTS];
+
+function ordered(exclude){
+  const l = instances().filter(b => !exclude.includes(b));
+  return (good && l.includes(good)) ? [good, ...l.filter(b => b !== good)] : l;
+}
+async function api(path, exclude = []){
+  let err;
+  for(const base of ordered(exclude)){
+    const c = new AbortController();
+    const t = setTimeout(() => c.abort(), 9000);
+    try{
+      const r = await fetch(base + path, {signal: c.signal});
+      clearTimeout(t);
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      const data = await r.json();
+      if(data && data.error) throw new Error(data.message || data.error);
+      good = base; store.set('good', base);
+      return {base, data};
+    }catch(e){ clearTimeout(t); err = e; }
+  }
+  throw err || new Error('no instance');
+}
+
+/* ---------- أدوات ---------- */
+const fmt = s => {
+  s = Math.max(0, Math.floor(s || 0));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0');
+};
+const idOf = u => { const m = /[?&]v=([\w-]{11})/.exec(u || ''); return m ? m[1] : null; };
+function parseInput(t){
+  t = t.trim();
+  if(/^[\w-]{11}$/.test(t)) return t;
+  const m = /(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/.exec(t);
+  return m ? m[1] : null;
+}
+function setStatus(t, err){ const s = $('#status'); s.textContent = t || ''; s.className = err ? 'err' : ''; }
+const mapItem = i => ({id: idOf(i.url), title: i.title, by: i.uploaderName, dur: i.duration, thumb: i.thumbnail});
+
+/* ---------- القائمة ---------- */
+let LOCAL = false;
+let list = [], cur = -1, nextPage = null, searchBase = null, lastQ = '', now = null, fails = [];
+const showThumbs = () => $('#thumbs').checked;
+
+function render(){
+  const box = $('#list'); box.textContent = '';
+  list.forEach((it, i) => {
+    const b = document.createElement('button');
+    b.className = 'item' + (i === cur ? ' on' : '');
+    if(showThumbs() && it.thumb){
+      const im = document.createElement('img'); im.loading = 'lazy'; im.src = it.thumb; im.alt = ''; b.appendChild(im);
+    }else{
+      const n = document.createElement('div'); n.className = 'nm'; n.textContent = '♪'; b.appendChild(n);
+    }
+    const w = document.createElement('div');
+    const t = document.createElement('div'); t.className = 't'; t.textContent = it.title || '';
+    const m = document.createElement('div'); m.className = 'm';
+    m.textContent = [it.by, it.dur > 0 ? fmt(it.dur) : ''].filter(Boolean).join(' · ');
+    w.append(t, m); b.appendChild(w);
+    b.onclick = () => { cur = i; fails = []; render(); load(list[i]); };
+    box.appendChild(b);
+  });
+  $('#more').style.display = nextPage ? 'block' : 'none';
+}
+
+async function doSearch(q){
+  const id = parseInput(q);
+  if(id){ cur = -1; fails = []; load({id, title: 'جاري التحميل…'}, true); return; }
+  setStatus('بيدوّر…'); lastQ = q;
+  try{
+    if(LOCAL){
+      const r = await fetch('/api/search?q=' + encodeURIComponent(q));
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      list = d.items || []; nextPage = null; cur = -1; render();
+      setStatus(list.length ? '' : 'مفيش نتايج');
+      return;
+    }
+    const {base, data} = await api('/search?q=' + encodeURIComponent(q) + '&filter=videos');
+    searchBase = base; nextPage = data.nextpage || null;
+    list = (data.items || []).filter(i => i.type === 'stream' && idOf(i.url)).map(mapItem);
+    cur = -1; render();
+    setStatus(list.length ? '' : 'مفيش نتايج');
+  }catch(e){ setStatus('مفيش سيرفر شغال دلوقتي. جرب بعد شوية أو ضيف سيرفر.', true); }
+}
+$('#more').onclick = async () => {
+  if(!nextPage) return;
+  try{
+    const r = await fetch(searchBase + '/nextpage/search?nextpage=' + encodeURIComponent(nextPage) + '&q=' + encodeURIComponent(lastQ) + '&filter=videos');
+    const d = await r.json();
+    nextPage = d.nextpage || null;
+    list = list.concat((d.items || []).filter(i => i.type === 'stream' && idOf(i.url)).map(mapItem));
+    render();
+  }catch(e){ setStatus('فشل تحميل المزيد', true); }
+};
+$('#f').onsubmit = e => { e.preventDefault(); const q = $('#q').value.trim(); if(q) doSearch(q); };
+
+/* ---------- اختيار الصوت ---------- */
+function pickAudio(streams){
+  let s = streams.filter(x => x.url && x.mimeType && audio.canPlayType(x.mimeType.split(';')[0]));
+  if(!s.length) s = streams.filter(x => x.url);
+  const orig = s.filter(x => x.audioTrackType === 'ORIGINAL');
+  if(orig.length) s = orig;
+  s.sort((a, b) => a.bitrate - b.bitrate);
+  if(!s.length) return null;
+  const q = $('#qual').value;
+  return q === 'low' ? s[0] : q === 'high' ? s[s.length - 1] : s[Math.floor((s.length - 1) / 2)];
+}
+
+/* ---------- التشغيل ---------- */
+async function load(item, fromLink){
+  setStatus('بيجهّز الصوت…');
+  $('#title').textContent = item.title || '';
+  $('#sub').textContent = item.by || '\u00a0';
+  try{
+    if(LOCAL){
+      const q = $('#qual').value;
+      const r = await fetch('/api/info?id=' + item.id + '&q=' + q);
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      now = {id: item.id, base: 'local', title: d.title || item.title, by: d.by || item.by, thumb: d.thumb || item.thumb};
+      audio.src = '/api/audio?id=' + item.id + '&q=' + q;
+      audio.playbackRate = parseFloat($('#rate').value);
+      const sv = store.get('pos_' + item.id, 0);
+      audio.onloadedmetadata = () => { if(sv > 5 && sv < audio.duration - 15) audio.currentTime = sv; };
+      audio.play().catch(() => {});
+      $('#title').textContent = now.title;
+      $('#sub').textContent = now.by || '\u00a0';
+      $('#info').textContent = d.abr ? '≈ ' + Math.round(d.abr * 0.45) + ' ميجا في الساعة' : '';
+      setStatus(''); setMedia();
+      return;
+    }
+    const {base, data} = await api('/streams/' + item.id, fails);
+    const s = pickAudio(data.audioStreams || []);
+    if(!s) throw new Error('no audio');
+    now = {id: item.id, base, title: data.title || item.title, by: data.uploader || item.by, thumb: data.thumbnailUrl || item.thumb};
+    audio.src = s.url;
+    audio.playbackRate = parseFloat($('#rate').value);
+    const saved = store.get('pos_' + item.id, 0);
+    audio.onloadedmetadata = () => {
+      if(saved > 5 && saved < audio.duration - 15) audio.currentTime = saved;
+    };
+    audio.play().catch(() => {});
+    $('#title').textContent = now.title;
+    $('#sub').textContent = now.by || '\u00a0';
+    const mb = s.bitrate ? Math.round(s.bitrate * 3600 / 8 / 1e6) : null;
+    $('#info').textContent = mb ? '≈ ' + mb + ' ميجا في الساعة' : '';
+    if(fromLink){
+      list = (data.relatedStreams || []).filter(i => i.type === 'stream' && idOf(i.url)).map(mapItem);
+      nextPage = null; render();
+    }
+    setStatus('');
+    setMedia();
+  }catch(e){
+    setStatus('مش قادر أجيب الصوت. ' + (LOCAL ? '(' + e.message + ')' : 'جرب تاني أو سيرفر تاني.'), true);
+  }
+}
+audio.addEventListener('error', () => {
+  if(!now || fails.length >= 3) { setStatus('الصوت وقف. جرب تاني.', true); return; }
+  fails.push(now.base);
+  const t = audio.currentTime;
+  const keep = {id: now.id, title: now.title, by: now.by, thumb: now.thumb};
+  load(keep).then(() => { audio.addEventListener('loadedmetadata', () => { if(t > 3) audio.currentTime = t; }, {once: true}); });
+});
+
+function setMedia(){
+  if(!('mediaSession' in navigator) || !now) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: now.title || '', artist: now.by || '',
+    artwork: now.thumb ? [{src: now.thumb, sizes: '480x360', type: 'image/jpeg'}] : []
+  });
+  const h = navigator.mediaSession.setActionHandler.bind(navigator.mediaSession);
+  try{
+    h('play', () => audio.play()); h('pause', () => audio.pause());
+    h('seekbackward', () => audio.currentTime -= 15); h('seekforward', () => audio.currentTime += 15);
+    h('previoustrack', prev); h('nexttrack', next);
+  }catch(e){}
+}
+function step(d){
+  if(!list.length) return;
+  const i = cur + d; if(i < 0 || i >= list.length) return;
+  cur = i; fails = []; render(); load(list[i]);
+}
+const next = () => step(1), prev = () => step(-1);
+audio.addEventListener('ended', next);
+
+/* ---------- واجهة المشغل ---------- */
+$('#pp').onclick = () => audio.paused ? audio.play() : audio.pause();
+$('#b15').onclick = () => audio.currentTime = Math.max(0, audio.currentTime - 15);
+$('#f15').onclick = () => audio.currentTime += 15;
+$('#next').onclick = next; $('#prev').onclick = prev;
+audio.addEventListener('play', () => $('#pp').textContent = '⏸');
+audio.addEventListener('pause', () => $('#pp').textContent = '▶');
+audio.addEventListener('waiting', () => $('#info').textContent = 'بيحمّل…');
+audio.addEventListener('playing', () => { if($('#info').textContent === 'بيحمّل…') $('#info').textContent = ''; });
+
+const seek = $('#seek'); let dragging = false;
+function paintSeek(){
+  const d = audio.duration || 0; if(!d) return;
+  const p = audio.currentTime / d * 100;
+  let b = 0;
+  try{ for(let i = 0; i < audio.buffered.length; i++){ if(audio.buffered.start(i) <= audio.currentTime + .5) b = Math.max(b, audio.buffered.end(i)); } }catch(e){}
+  b = b / d * 100;
+  seek.style.background = 'linear-gradient(to right,#ff4d4d ' + p + '%,#5b6272 ' + p + '%,#5b6272 ' + b + '%,#2a2f3a ' + b + '%)';
+}
+audio.addEventListener('timeupdate', () => {
+  if(!dragging){ seek.max = audio.duration || 100; seek.value = audio.currentTime; }
+  $('#cur').textContent = fmt(audio.currentTime);
+  $('#dur').textContent = fmt(audio.duration);
+  paintSeek();
+});
+audio.addEventListener('progress', paintSeek);
+seek.addEventListener('input', () => { dragging = true; $('#cur').textContent = fmt(seek.value); });
+seek.addEventListener('change', () => { audio.currentTime = +seek.value; dragging = false; });
+
+setInterval(() => { if(now && !audio.paused && audio.currentTime > 5) store.set('pos_' + now.id, Math.floor(audio.currentTime)); }, 5000);
+audio.addEventListener('ended', () => { if(now) store.set('pos_' + now.id, 0); });
+
+$('#rate').onchange = () => { audio.playbackRate = parseFloat($('#rate').value); };
+let sleepT = null;
+$('#sleep').onchange = () => {
+  clearTimeout(sleepT);
+  const m = +$('#sleep').value;
+  if(m) sleepT = setTimeout(() => { audio.pause(); $('#sleep').value = '0'; }, m * 60000);
+};
+$('#thumbs').checked = store.get('thumbs', false);
+$('#thumbs').onchange = () => { store.set('thumbs', $('#thumbs').checked); render(); };
+$('#qual').value = store.get('qual', 'low');
+$('#qual').onchange = () => store.set('qual', $('#qual').value);
+
+$('#addInst').onclick = () => {
+  const u = prompt('الصق رابط API لسيرفر Piped (مثال: https://pipedapi.example.com)');
+  if(u && /^https?:\/\//.test(u)){ custom.unshift(u.replace(/\/+$/, '')); store.set('custom', custom); setStatus('اتضاف السيرفر'); }
+};
+
+/* ---------- مشغل يوتيوب الرسمي (احتياطي، فيديو) ---------- */
+$('#official').onclick = () => {
+  if(!now) return;
+  audio.pause();
+  $('#fbf').src = 'https://www.youtube-nocookie.com/embed/' + now.id + '?autoplay=1&start=' + Math.floor(audio.currentTime || 0);
+  $('#fb').classList.add('show');
+};
+$('#fbx').onclick = () => { $('#fbf').src = 'about:blank'; $('#fb').classList.remove('show'); };
+
+fetch('/api/ping').then(r => r.ok ? r.json() : null).then(j => {
+  LOCAL = !!(j && j.ok);
+  setStatus(LOCAL ? 'متصل بالسيرفر المحلي ✓ اكتب اسم بودكاست أو الصق لينك' : 'اكتب اسم بودكاست أو الصق لينك فيديو');
+}).catch(() => setStatus('اكتب اسم بودكاست أو الصق لينك فيديو'));
+</script>
+</body>
+</html>
